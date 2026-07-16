@@ -27,16 +27,23 @@ jobs:
         with:
           python-version: '3.12'
       - name: Build from official IMDb datasets
-        run: python scripts/build_oracle_20000.py
+        id: build
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python scripts/build_oracle_20000.py 2>&1 | tee build.log
+      - name: Commit generated files or diagnostics
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add build.log
+          test -f index-20000.html && git add index-20000.html || true
+          test -f build-report.json && git add build-report.json || true
+          git commit -m 'Résultat construction Oracle 20000 [skip ci]' || exit 0
+          git push origin HEAD:oracle-20000-build
       - name: Validate generated file
         run: |
           test -s index-20000.html
           test -s build-report.json
           grep -q '20 000 films' index-20000.html
-      - name: Commit generated site
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index-20000.html build-report.json
-          git commit -m 'Construire Oracle 20000 films [skip ci]' || exit 0
-          git push origin HEAD:oracle-20000-build
