@@ -1,0 +1,40 @@
+name: Build Oracle 20000
+
+on:
+  push:
+    branches:
+      - oracle-20000-build
+    paths:
+      - .github/workflows/build-oracle-20000.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: oracle-20000-build
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build from official IMDb datasets
+        run: python scripts/build_oracle_20000.py
+      - name: Validate generated file
+        run: |
+          test -s index-20000.html
+          test -s build-report.json
+          grep -q '20 000 films' index-20000.html
+      - name: Commit generated site
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index-20000.html build-report.json
+          git commit -m 'Construire Oracle 20000 films [skip ci]'
+          git push origin oracle-20000-build
