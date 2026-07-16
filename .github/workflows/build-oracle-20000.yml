@@ -31,7 +31,7 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          python scripts/build_oracle_20000.py 2>&1 | tee build.log
+          python -c "import csv,sys,runpy; csv.field_size_limit(sys.maxsize); runpy.run_path('scripts/build_oracle_20000.py',run_name='__main__')" 2>&1 | tee build.log
       - name: Commit generated files or diagnostics
         if: always()
         run: |
