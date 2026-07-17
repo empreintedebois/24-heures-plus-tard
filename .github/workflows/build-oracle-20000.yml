@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - scripts/build_oracle_20000.py
+      - scripts/test_oracle_20000.mjs
       - .github/workflows/build-oracle-20000.yml
   workflow_dispatch:
 
@@ -15,35 +16,75 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - name: Checkout work branch
         uses: actions/checkout@v4
         with:
           ref: oracle-20000-build
           fetch-depth: 0
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
       - name: Build from official IMDb datasets
-        id: build
-        continue-on-error: true
         run: |
           set -o pipefail
           python -c "import csv,sys,runpy; csv.field_size_limit(sys.maxsize); runpy.run_path('scripts/build_oracle_20000.py',run_name='__main__')" 2>&1 | tee build.log
-      - name: Commit generated files or diagnostics
-        if: always()
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add build.log
-          test -f index-20000.html && git add index-20000.html || true
-          test -f build-report.json && git add build-report.json || true
-          git commit -m 'Résultat construction Oracle 20000 [skip ci]' || exit 0
-          git push origin HEAD:oracle-20000-build
-      - name: Validate generated file
+
+      - name: Static validation
         run: |
           test -s index-20000.html
           test -s build-report.json
-          grep -q '20 000 films' index-20000.html
+          python - <<'PY'
+          import json
+          r=json.load(open('build-report.json',encoding='utf-8'))
+          assert r['total']==20000, r['total']
+          assert len(r['hour_counts'])==24
+          assert min(r['hour_counts'])>=100, r['hour_counts']
+          assert r['random_outside_categories']>0
+          print('Couverture:',r['hour_counts'])
+          PY
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install browser test engines
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium webkit
+
+      - name: Test Chromium and WebKit mobile interactions
+        run: |
+          python -m http.server 8000 >/tmp/oracle-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          node scripts/test_oracle_20000.mjs
+
+      - name: Prepare downloadable index.html
+        run: |
+          mkdir -p dist
+          cp index-20000.html dist/index.html
+          cp build-report.json dist/build-report.json
+          cp test-report.json dist/test-report.json
+
+      - name: Upload validated site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oracle-20000-validated
+          path: dist/
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Commit generated reports
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index-20000.html build-report.json test-report.json build.log
+          git commit -m 'Valider Oracle 20000 sur Chromium et WebKit [skip ci]' || exit 0
+          git push origin HEAD:oracle-20000-build
