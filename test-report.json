@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-07-17T06:29:59.608Z",
+  "generatedAt": "2026-07-17T06:46:15.995Z",
   "static": {
     "total": 20000,
     "minHour": 150,
-    "maxHour": 3123,
+    "maxHour": 3100,
     "hourCounts": [
-      1096,
-      3123,
-      1828,
-      932,
-      527,
-      452,
-      366,
-      420,
-      397,
-      483,
-      229,
+      1091,
+      3100,
+      1817,
+      930,
+      524,
+      448,
+      365,
+      418,
+      395,
+      482,
+      227,
       169,
       168,
       151,
@@ -24,14 +24,14 @@
       150,
       150,
       154,
-      280,
+      279,
       566,
       150,
       150,
       150
     ],
-    "randomOutsideCategories": 14686,
-    "ratingMin": 5.5,
+    "randomOutsideCategories": 14726,
+    "ratingMin": 4.5,
     "years": [
       1990,
       2025
@@ -44,12 +44,71 @@
         "width": 390,
         "height": 844
       },
-      "checks": {},
-      "success": false,
-      "error": "page.waitForFunction: Timeout 30000ms exceeded.",
-      "errors": [
-        "pageerror: Cannot read properties of undefined (reading 'i')"
-      ]
+      "checks": {
+        "base": true,
+        "history": true,
+        "catalog": true,
+        "relations": true,
+        "randomBands": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "reload": true
+      },
+      "errors": [],
+      "success": true
+    },
+    {
+      "name": "Chromium grand mobile",
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "checks": {
+        "base": true
+      },
+      "errors": [],
+      "success": true
+    },
+    {
+      "name": "WebKit iPhone 13",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "checks": {
+        "base": true,
+        "history": true,
+        "catalog": true,
+        "relations": true,
+        "randomBands": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "reload": true
+      },
+      "errors": [],
+      "success": true
+    },
+    {
+      "name": "WebKit iPad portrait",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "checks": {
+        "base": true
+      },
+      "errors": [],
+      "success": true
     }
   ]
 }
