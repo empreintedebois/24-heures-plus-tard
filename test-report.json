@@ -1,0 +1,55 @@
+{
+  "generatedAt": "2026-07-17T06:29:59.608Z",
+  "static": {
+    "total": 20000,
+    "minHour": 150,
+    "maxHour": 3123,
+    "hourCounts": [
+      1096,
+      3123,
+      1828,
+      932,
+      527,
+      452,
+      366,
+      420,
+      397,
+      483,
+      229,
+      169,
+      168,
+      151,
+      150,
+      153,
+      150,
+      150,
+      154,
+      280,
+      566,
+      150,
+      150,
+      150
+    ],
+    "randomOutsideCategories": 14686,
+    "ratingMin": 5.5,
+    "years": [
+      1990,
+      2025
+    ]
+  },
+  "browsers": [
+    {
+      "name": "Chromium iPhone 13",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "checks": {},
+      "success": false,
+      "error": "page.waitForFunction: Timeout 30000ms exceeded.",
+      "errors": [
+        "pageerror: Cannot read properties of undefined (reading 'i')"
+      ]
+    }
+  ]
+}
