@@ -31,8 +31,12 @@ jobs:
 
       - name: Build from official IMDb datasets
         run: |
-          set -o pipefail
-          python -c "import csv,sys,runpy; csv.field_size_limit(sys.maxsize); runpy.run_path('scripts/build_oracle_20000.py',run_name='__main__')" 2>&1 | tee build.log
+          if test -s index-20000.html && test -s build-report.json; then
+            echo 'Réutilisation de la construction IMDb déjà générée.' | tee build.log
+          else
+            set -o pipefail
+            python -c "import csv,sys,runpy; csv.field_size_limit(sys.maxsize); runpy.run_path('scripts/build_oracle_20000.py',run_name='__main__')" 2>&1 | tee build.log
+          fi
 
       - name: Static validation
         run: |
@@ -59,32 +63,45 @@ jobs:
           npx playwright install --with-deps chromium webkit
 
       - name: Test Chromium and WebKit mobile interactions
+        id: browser_tests
+        continue-on-error: true
         run: |
           python -m http.server 8000 >/tmp/oracle-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID || true' EXIT
           sleep 2
-          node scripts/test_oracle_20000.mjs
+          node scripts/test_oracle_20000.mjs 2>&1 | tee browser-test.log
 
-      - name: Prepare downloadable index.html
+      - name: Prepare downloadable index.html and diagnostics
+        if: always()
         run: |
           mkdir -p dist
           cp index-20000.html dist/index.html
           cp build-report.json dist/build-report.json
-          cp test-report.json dist/test-report.json
+          test -f test-report.json && cp test-report.json dist/test-report.json || true
+          test -f browser-test.log && cp browser-test.log dist/browser-test.log || true
+          test -f build.log && cp build.log dist/build.log || true
 
-      - name: Upload validated site artifact
+      - name: Upload site and diagnostics artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: oracle-20000-validated
+          name: oracle-20000-diagnostics
           path: dist/
           retention-days: 14
           if-no-files-found: error
 
       - name: Commit generated reports
+        if: always()
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index-20000.html build-report.json test-report.json build.log
-          git commit -m 'Valider Oracle 20000 sur Chromium et WebKit [skip ci]' || exit 0
+          git add index-20000.html build-report.json build.log
+          test -f test-report.json && git add test-report.json || true
+          test -f browser-test.log && git add browser-test.log || true
+          git commit -m 'Enregistrer les diagnostics Oracle 20000 [skip ci]' || exit 0
           git push origin HEAD:oracle-20000-build
+
+      - name: Fail when browser tests failed
+        if: steps.browser_tests.outcome != 'success'
+        run: exit 1
